@@ -16,30 +16,39 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.lib.styles import ParagraphStyle
 
 # =============================
-# إعدادات أساسية
+# إعدادات أساسية من Environment Variables
 # =============================
-DB_PATH = "bot.db"
-PDF_DIR = "backups"
-RCLONE_REMOTE = "SNAE:TelegramBackups"
+DB_PATH = os.getenv("DB_PATH", "bot.db")
+PDF_DIR = os.getenv("PDF_DIR", "backups")
+RCLONE_REMOTE = os.getenv("RCLONE_REMOTE", "SNAE:TelegramBackups")
 
-FONT_DIR = "fonts"
-FONT_FILE = "NotoSans-Regular.ttf"
+FONT_DIR = os.getenv("FONT_DIR", "fonts")
+FONT_FILE = os.getenv("FONT_FILE", "NotoSans-Regular.ttf")
 FONT_PATH = os.path.join(FONT_DIR, FONT_FILE)
-FONT_NAME = "NotoSans"
+FONT_NAME = os.getenv("FONT_NAME", "NotoSans")
 
-OWNER_NAME = "Sultan AE"
-BOT_NAME = "SNAE"
-PHONES = ["+249911032152", "+249119785938"]
+OWNER_NAME = os.getenv("OWNER_NAME", "Sultan AE")
+BOT_NAME = os.getenv("BOT_NAME", "SNAE")
+PHONES = os.getenv("PHONES", "+249911032152,+249119785938").split(",")
 
 # تيليجرام
-TELEGRAM_BOT_TOKEN = ""
-TELEGRAM_CHAT_ID = 6452610519  # ضع chat_id الخاص بك
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+TELEGRAM_CHAT_ID = int(os.getenv("TELEGRAM_CHAT_ID", "6452610519"))
 
 # البريد الإلكتروني
-EMAIL_FROM = "toya.san.13@gmail.com"
-EMAIL_TO   = "ala.kun.1600@gmail.com"
-EMAIL_APP_PASSWORD = ""  # كلمة مرور التطبيقات
+EMAIL_FROM = os.getenv("EMAIL_FROM")
+EMAIL_TO   = os.getenv("EMAIL_TO")
+EMAIL_APP_PASSWORD = os.getenv("EMAIL_APP_PASSWORD")
 
+# ===== فحص Environment Variables =====
+required_vars = ["TELEGRAM_BOT_TOKEN", "EMAIL_FROM", "EMAIL_TO", "EMAIL_APP_PASSWORD"]
+for var in required_vars:
+    if not globals()[var]:
+        raise ValueError(f"❌ Environment variable {var} is not set")
+
+# =============================
+# إنشاء مجلدات
+# =============================
 os.makedirs(PDF_DIR, exist_ok=True)
 os.makedirs(FONT_DIR, exist_ok=True)
 
@@ -191,7 +200,7 @@ def send_email(pdf_paths, status_msg):
         print("[OK] Email sent successfully.")
 
 # =============================
-# إرسال رسالة تيليجرام (بدون تحذير asyncio)
+# إرسال رسالة تيليجرام
 # =============================
 def send_telegram_message(message):
     bot = Bot(token=TELEGRAM_BOT_TOKEN)
