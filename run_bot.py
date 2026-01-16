@@ -12,6 +12,7 @@ from telegram.ext import (
 from openai import OpenAI
 import smtplib
 from email.mime.text import MIMEText
+
 # ================= CONFIG =================
 TOKEN = os.getenv("TOKEN")
 OPENAI_KEY = os.getenv("OPENAI_KEY")
@@ -31,6 +32,7 @@ EMAIL_RECEIVER = os.getenv("EMAIL_RECEIVER")
 for var_name in ["EMAIL_ACCOUNT", "EMAIL_PASSWORD", "EMAIL_RECEIVER"]:
     if not os.getenv(var_name):
         raise ValueError(f"❌ Environment variable {var_name} is not set")
+
 # ================= DATABASE =================
 db = sqlite3.connect("bot.db", check_same_thread=False)
 c = db.cursor()
@@ -448,14 +450,12 @@ async def text(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # ===== AI =====
     elif state == AI:
-    res = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[{"role": "user", "content": msg}]
-    )
-    # تعديل الوصول لمحتوى الرسالة
-    await update.message.reply_text(res.choices[0].message["content"])
+        res = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": msg}]
         )
-        await update.message.reply_text(res.choices[0].message.content)
+        content = res.choices[0].message["content"]
+        await update.message.reply_text(content)
 
 # ================= FILE / IMAGE HANDLERS =================
 async def file_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -487,9 +487,4 @@ def main():
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text))
     app.add_handler(MessageHandler(filters.Document.ALL, file_handler))
-    app.add_handler(MessageHandler(filters.PHOTO, image_handler))
-    print("🚀 BOT RUNNING")
-    app.run_polling()
-
-if __name__ == "__main__":
-    main()
+    app.add
