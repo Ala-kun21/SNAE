@@ -1,7 +1,7 @@
 # =========================================================
 # TELEGRAM MANAGER BOT - FINAL FULL WORKING VERSION
 # =========================================================
-
+import os
 import sqlite3
 from datetime import datetime
 from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove
@@ -13,14 +13,14 @@ from openai import OpenAI
 import smtplib
 from email.mime.text import MIMEText
 # ================= CONFIG =================
-TOKEN = ""
-OPENAI_KEY = ""
+TOKEN = os.getenv("TOKEN") 
+OPENAI_KEY = os.getenv("OPENAI_KEY")
 client = OpenAI(api_key=OPENAI_KEY)
 
 # ====== EMAIL CONFIG ======
-EMAIL_ACCOUNT = "toya.san.13@gmail.com"
-EMAIL_PASSWORD = ""
-EMAIL_RECEIVER = "ala.kun.1600@outlook.com"
+EMAIL_ACCOUNT = os.getenv("EMAIL_ACCOUNT")       # بريدك الإلكتروني
+EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")     # كلمة المرور أو App Password
+EMAIL_RECEIVER = os.getenv("EMAIL_RECEIVER")     # البريد المستقبل
 
 # ================= DATABASE =================
 db = sqlite3.connect("bot.db", check_same_thread=False)
