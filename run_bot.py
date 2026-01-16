@@ -13,15 +13,24 @@ from openai import OpenAI
 import smtplib
 from email.mime.text import MIMEText
 # ================= CONFIG =================
-TOKEN = os.getenv("TOKEN") 
+TOKEN = os.getenv("TOKEN")
 OPENAI_KEY = os.getenv("OPENAI_KEY")
+
+# ===== فحص OPENAI_KEY =====
+if not OPENAI_KEY:
+    raise ValueError("❌ Environment variable OPENAI_KEY is not set")
+
 client = OpenAI(api_key=OPENAI_KEY)
 
 # ====== EMAIL CONFIG ======
-EMAIL_ACCOUNT = os.getenv("EMAIL_ACCOUNT")       # بريدك الإلكتروني
-EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")     # كلمة المرور أو App Password
-EMAIL_RECEIVER = os.getenv("EMAIL_RECEIVER")     # البريد المستقبل
+EMAIL_ACCOUNT = os.getenv("EMAIL_ACCOUNT")
+EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
+EMAIL_RECEIVER = os.getenv("EMAIL_RECEIVER")
 
+# ===== فحص متغيرات البريد =====
+for var_name in ["EMAIL_ACCOUNT", "EMAIL_PASSWORD", "EMAIL_RECEIVER"]:
+    if not os.getenv(var_name):
+        raise ValueError(f"❌ Environment variable {var_name} is not set")
 # ================= DATABASE =================
 db = sqlite3.connect("bot.db", check_same_thread=False)
 c = db.cursor()
@@ -439,9 +448,12 @@ async def text(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # ===== AI =====
     elif state == AI:
-        res = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[{"role": "user", "content": msg}]
+    res = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "user", "content": msg}]
+    )
+    # تعديل الوصول لمحتوى الرسالة
+    await update.message.reply_text(res.choices[0].message["content"])
         )
         await update.message.reply_text(res.choices[0].message.content)
 
