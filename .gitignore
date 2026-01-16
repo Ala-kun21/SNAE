@@ -1,0 +1,15 @@
+credentials.json
+*.env
+bot.db
+phones.db
+files.db
+db.sqlite3
+phones_last.txt
+sqlite_sequence_last.txt
+venv/
+media/
+backups/
+storage/
+table_pdfs/
+fonts/
+start.sh
