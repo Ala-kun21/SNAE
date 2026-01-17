@@ -103,16 +103,17 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif data == "stop_bot1":
         if bot1_process and bot1_process.poll() is None:
             bot1_process.terminate()
-            await safe_edit(query, "⏹️ تم إيقاف بوت 1", bot1_menu())
+            await safe_edit(query, "📤 تم تشغيل بوت 2 (إرسال تقرير يومي)", bot2_menu())
         else:
-            await safe_edit(query, "بوت 1 غير شغال", bot1_menu())
+            await safe_edit(query, "بوت 2 يعمل بالفعل", bot2_menu())
 
     # ---------- BOT 2 (daily report) ----------
     elif data == "start_bot2":
-        def run_daily():
-            SNAE.daily_report()  # تشغيل الوظيفة مباشرة في Thread
-        threading.Thread(target=run_daily).start()
-        await safe_edit(query, "📤 جاري إرسال التقرير اليومي...", bot2_menu())
+        if not bot2_process or bot2_process.poll() is not None:
+            bot2_process = subprocess.Popen(["python3", "SNAE.py"])
+            await safe_edit(query, "▶️ تم تشغيل بوت 1", bot1_menu())
+        else:
+            await safe_edit(query, "بوت 1 يعمل بالفعل", bot1_menu())
 
     # ---------- MAIN BOT CONTROL ----------
     elif data == "start_main":
