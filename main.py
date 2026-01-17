@@ -1,10 +1,22 @@
 import os
+import threading
+from flask import Flask
 import subprocess
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ApplicationBuilder, CallbackQueryHandler, CommandHandler, ContextTypes
 
 # ===== CONFIG =====
 TOKEN_MAIN = os.getenv("TOKEN_MAIN")
+PORT = int(os.environ.get("PORT", 8080))  # المنصة تعطي PORT تلقائي
+flask_app = Flask(__name__)
+# ===== Flask route =====
+@flask_app.route("/")
+def home():
+    return "Bot is running!"
+# ===== تشغيل Flask في خلفية البوت =====
+def run_flask():
+    flask_app.run(host="0.0.0.0", port=PORT)
+threading.Thread(target=run_flask).start()
 # ===== GLOBALS =====
 bot1_process = None
 bot2_process = None
