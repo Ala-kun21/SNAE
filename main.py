@@ -1,34 +1,38 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 import os
-import subprocess
 import threading
-from flask import Flask
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ApplicationBuilder, CallbackQueryHandler, CommandHandler, ContextTypes
+from flask import Flask
 
-# ================= CONFIG =================
+# =============================
+# ===== CONFIG =====
+# =============================
 TOKEN_MAIN = os.getenv("TOKEN_MAIN")
-if not TOKEN_MAIN:
-    print("⚠️ TOKEN_MAIN not found in environment variables!")
-    exit(1)
 
-PORT = int(os.environ.get("PORT", 8080))  # المنصة تعطي PORT تلقائي
-
-# ================= GLOBALS =================
+# =============================
+# ===== GLOBALS =====
+# =============================
 bot1_process = None
-bot2_process = None
 
-# ================= WEB SERVER =================
-app = Flask(__name__)  # ⚡ مهم تسميه app للمنصات
+# =============================
+# ===== WEB SERVER =====
+# =============================
+PORT = int(os.environ.get("PORT", 8080))
+web_app = Flask(__name__)
 
-@app.route("/")
+@web_app.route("/")
 def home():
     return "🤖 Telegram Bot Server is Running ✅"
 
 def run_web_server():
-    print(f"🌐 Flask web server running on port {PORT}")
-    app.run(host="0.0.0.0", port=PORT)
+    web_app.run(host="0.0.0.0", port=PORT)
 
-# ================= MENUS =================
+# =============================
+# ===== MENUS =====
+# =============================
 def main_menu():
     keyboard = [
         [InlineKeyboardButton("📊 بوت إدارة بياناتي", callback_data="menu_bot1")],
@@ -53,20 +57,29 @@ def bot2_menu():
     ]
     return InlineKeyboardMarkup(keyboard)
 
-# ================= SAFE EDIT =================
+# =============================
+# ===== SAFE EDIT =====
+# =============================
 async def safe_edit(query, text, markup=None):
     try:
         await query.edit_message_text(text, reply_markup=markup)
     except:
         pass
 
-# ================= START COMMAND =================
+# =============================
+# ===== START COMMAND =====
+# =============================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("🏠 القائمة الرئيسية", reply_markup=main_menu())
 
-# ================= BUTTON HANDLER =================
+# =============================
+# ===== BUTTON HANDLER =====
+# =============================
+import subprocess
+import SNAE  # استيراد ملف SNAE.py
+
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    global bot1_process, bot2_process
+    global bot1_process
     query = update.callback_query
     data = query.data
     await query.answer()
@@ -94,13 +107,12 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             await safe_edit(query, "بوت 1 غير شغال", bot1_menu())
 
-    # ---------- BOT 2 ----------
+    # ---------- BOT 2 (daily report) ----------
     elif data == "start_bot2":
-        if not bot2_process or bot2_process.poll() is not None:
-            bot2_process = subprocess.Popen(["python3", "SNAE.py"])
-            await safe_edit(query, "📤 تم تشغيل بوت 2 (إرسال تقرير يومي)", bot2_menu())
-        else:
-            await safe_edit(query, "بوت 2 يعمل بالفعل", bot2_menu())
+        def run_daily():
+            SNAE.daily_report()  # تشغيل الوظيفة مباشرة في Thread
+        threading.Thread(target=run_daily).start()
+        await safe_edit(query, "📤 جاري إرسال التقرير اليومي...", bot2_menu())
 
     # ---------- MAIN BOT CONTROL ----------
     elif data == "start_main":
@@ -114,21 +126,21 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
         )
 
-# ================= RUN MAIN =================
+# =============================
+# ===== RUN MAIN =====
+# =============================
 def main():
-    # 1️⃣ تشغيل Flask server في الخلفية
-    threading.Thread(target=run_web_server, daemon=True).start()
+    # تشغيل Flask في الخلفية
+    threading.Thread(target=run_web_server).start()
 
-    # 2️⃣ تشغيل Telegram Bot
-    app_telegram = ApplicationBuilder().token(TOKEN_MAIN).build()
-    app_telegram.add_handler(CommandHandler("start", start))
-    app_telegram.add_handler(CallbackQueryHandler(button_handler))
+    # تشغيل بوت تيليجرام
+    app = ApplicationBuilder().token(TOKEN_MAIN).build()
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CallbackQueryHandler(button_handler))
 
     print("💻 Sultan AE")
-    print("🤖 BOT,SNAE")
-    print("🔑 Login...")
-    app_telegram.run_polling()
+    print("🤖 BOT SNAE")
+    app.run_polling()
 
-# ================= ENTRY POINT =================
 if __name__ == "__main__":
     main()
