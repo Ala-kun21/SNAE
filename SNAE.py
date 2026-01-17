@@ -16,7 +16,7 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.lib.styles import ParagraphStyle
 
 # =============================
-# إعدادات أساسية
+# ===== CONFIG =====
 # =============================
 DB_PATH = "bot.db"
 PDF_DIR = "backups"
@@ -31,11 +31,11 @@ OWNER_NAME = "Sultan AE"
 BOT_NAME = "SNAE"
 PHONES = ["+249911032152", "+249119785938"]
 
-TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")   # توكن البوت
-TELEGRAM_CHAT_ID = int(os.getenv("TELEGRAM_CHAT_ID"))  # chat_id
-EMAIL_FROM = os.getenv("EMAIL_FROM")                   # بريد المرسل
-EMAIL_TO = os.getenv("EMAIL_TO")                       # بريد المستقبل
-EMAIL_APP_PASSWORD = os.getenv("EMAIL_APP_PASSWORD")   # كلمة مرور التطبيق Gmail
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+TELEGRAM_CHAT_ID = int(os.getenv("TELEGRAM_CHAT_ID"))
+EMAIL_FROM = os.getenv("EMAIL_FROM")
+EMAIL_TO = os.getenv("EMAIL_TO")
+EMAIL_APP_PASSWORD = os.getenv("EMAIL_APP_PASSWORD")
 
 os.makedirs(PDF_DIR, exist_ok=True)
 os.makedirs(FONT_DIR, exist_ok=True)
@@ -60,7 +60,7 @@ def clean(text):
     return str(text)
 
 # =============================
-# إعداد جدول PDF
+# إنشاء PDF
 # =============================
 def auto_column_widths(data, page_width):
     cols = len(data[0])
@@ -77,6 +77,7 @@ def auto_column_widths(data, page_width):
     return widths
 
 def build_table(data, page_width):
+    from reportlab.platypus import Table, TableStyle
     table = Table(data, colWidths=auto_column_widths(data, page_width), repeatRows=1)
     style = TableStyle([
         ('ALIGN', (0,0), (-1,-1), 'CENTER'),
@@ -95,9 +96,6 @@ def build_table(data, page_width):
     table.setStyle(style)
     return table
 
-# =============================
-# Header/Footer PDF
-# =============================
 def header_footer(canvas, doc):
     canvas.saveState()
     canvas.setFont(FONT_NAME, 9)
@@ -132,6 +130,7 @@ def check_new_data():
 # إنشاء PDF
 # =============================
 def create_pdf(new_data=True):
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
     page_width = A4[0]-60
@@ -188,7 +187,7 @@ def send_email(pdf_paths, status_msg):
         print("[OK] Email sent successfully.")
 
 # =============================
-# إرسال رسالة تيليجرام (بدون تحذير asyncio)
+# إرسال رسالة تيليجرام
 # =============================
 def send_telegram_message(message):
     bot = Bot(token=TELEGRAM_BOT_TOKEN)
@@ -204,8 +203,7 @@ def daily_report():
     send_telegram_message(f"تم ارسال تقرير يومي يا سيد {OWNER_NAME}\n{status_msg}")
 
 # =============================
-# تشغيل مرة واحدة للتجربة أو Cron
+# تشغيل مباشر لو الملف فقط
 # =============================
 if __name__ == "__main__":
     daily_report()
-    
