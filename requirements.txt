@@ -1,4 +1,4 @@
-pip install flask
+flask==2.3.3
 Django==6.0.1
 IMAPClient==3.0.1
 annotated-types==0.7.0
