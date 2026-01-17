@@ -12,27 +12,16 @@ from telegram.ext import (
 from openai import OpenAI
 import smtplib
 from email.mime.text import MIMEText
-
 # ================= CONFIG =================
-TOKEN = os.getenv("TOKEN")
-OPENAI_KEY = os.getenv("OPENAI_KEY")
-
-# ===== فحص OPENAI_KEY =====
-if not OPENAI_KEY:
-    raise ValueError("❌ Environment variable OPENAI_KEY is not set")
+TOKEN = os.getenv("TOKEN")              # توكن البوت
+OPENAI_KEY = os.getenv("OPENAI_KEY")    # مفتاح OpenAI API
+EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")  # كلمة مرور البريد (تطبيق Gmail)
 
 client = OpenAI(api_key=OPENAI_KEY)
 
 # ====== EMAIL CONFIG ======
-EMAIL_ACCOUNT = os.getenv("EMAIL_ACCOUNT")
-EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
-EMAIL_RECEIVER = os.getenv("EMAIL_RECEIVER")
-
-# ===== فحص متغيرات البريد =====
-for var_name in ["EMAIL_ACCOUNT", "EMAIL_PASSWORD", "EMAIL_RECEIVER"]:
-    if not os.getenv(var_name):
-        raise ValueError(f"❌ Environment variable {var_name} is not set")
-
+EMAIL_ACCOUNT = os.getenv("EMAIL_ACCOUNT", "toya.san.13@gmail.com")   # البريد المرسل
+EMAIL_RECEIVER = os.getenv("EMAIL_RECEIVER", "ala.kun.1600@outlook.com")  # البريد المستقبل
 # ================= DATABASE =================
 db = sqlite3.connect("bot.db", check_same_thread=False)
 c = db.cursor()
@@ -454,8 +443,7 @@ async def text(update: Update, context: ContextTypes.DEFAULT_TYPE):
             model="gpt-4o-mini",
             messages=[{"role": "user", "content": msg}]
         )
-        content = res.choices[0].message["content"]
-        await update.message.reply_text(content)
+        await update.message.reply_text(res.choices[0].message.content)
 
 # ================= FILE / IMAGE HANDLERS =================
 async def file_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -487,4 +475,9 @@ def main():
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text))
     app.add_handler(MessageHandler(filters.Document.ALL, file_handler))
-    app.add
+    app.add_handler(MessageHandler(filters.PHOTO, image_handler))
+    print("🚀 BOT RUNNING")
+    app.run_polling()
+
+if __name__ == "__main__":
+    main()
