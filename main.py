@@ -3,11 +3,27 @@ import subprocess
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ApplicationBuilder, CallbackQueryHandler, CommandHandler, ContextTypes
 
+# ====== ADDITION (WEB SERVER) ======
+from flask import Flask
+import threading
+
 # ===== CONFIG =====
 TOKEN_MAIN = os.getenv("TOKEN_MAIN")
+
 # ===== GLOBALS =====
 bot1_process = None
 bot2_process = None
+
+# ===== WEB SERVER =====
+web_app = Flask(__name__)
+
+@web_app.route("/")
+def home():
+    return "🤖 Telegram Bot Server is Running ✅"
+
+def run_web_server():
+    port = int(os.environ.get("PORT", 8080))
+    web_app.run(host="0.0.0.0", port=port)
 
 # ===== MENUS =====
 def main_menu():
@@ -87,11 +103,18 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif data == "start_main":
         await safe_edit(query, "▶️ البوت الرئيسي يعمل...", main_menu())
     elif data == "stop_main":
-        await safe_edit(query, "⏹️ تم إيقاف البوت الرئيسي مؤقتًا.", 
-                        InlineKeyboardMarkup([[InlineKeyboardButton("▶️ تشغيل البوت الرئيسي", callback_data="start_main")]]))
+        await safe_edit(
+            query,
+            "⏹️ تم إيقاف البوت الرئيسي مؤقتًا.",
+            InlineKeyboardMarkup(
+                [[InlineKeyboardButton("▶️ تشغيل البوت الرئيسي", callback_data="start_main")]]
+            )
+        )
 
 # ===== RUN MAIN =====
 def main():
+    threading.Thread(target=run_web_server).start()  # ✅ تشغيل السيرفر
+
     app = ApplicationBuilder().token(TOKEN_MAIN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(button_handler))
@@ -102,4 +125,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-                        
